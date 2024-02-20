@@ -1,0 +1,1 @@
+- Pull out the routine to create a new window from the InitOpenGL function and either make it's own function or make it apart of main 

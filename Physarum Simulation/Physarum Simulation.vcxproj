@@ -132,8 +132,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Agent_Class\Agent.cpp" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="Shader_Class\Shader.cpp" />
+    <ClCompile Include="SimScreen_Class\SimScreen.cpp" />
     <ClCompile Include="Source.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Agent_Class\Agent.h" />
+    <ClInclude Include="includes.h" />
+    <ClInclude Include="SimScreen_Class\SimScreen.h" />
+    <ClInclude Include="Shader_Class\Shader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="TODO.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shader_Class\shader.fs" />
+    <None Include="Shader_Class\shader.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
