@@ -134,13 +134,16 @@
   <ItemGroup>
     <ClCompile Include="Agent_Class\Agent.cpp" />
     <ClCompile Include="glad.c" />
+    <ClCompile Include="Renderer_Class\Renderer.cpp" />
     <ClCompile Include="Shader_Class\Shader.cpp" />
     <ClCompile Include="SimScreen_Class\SimScreen.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Agents_Class\Agents.h" />
     <ClInclude Include="Agent_Class\Agent.h" />
     <ClInclude Include="includes.h" />
+    <ClInclude Include="Renderer_Class\Renderer.h" />
     <ClInclude Include="SimScreen_Class\SimScreen.h" />
     <ClInclude Include="Shader_Class\Shader.h" />
   </ItemGroup>

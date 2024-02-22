@@ -1,10 +1,9 @@
 #include "Shader_Class/Shader.h"
-#include "SimScreen_Class/SimScreen.h"
+#include "Renderer_Class/Renderer.h"
 
 void framebuffer_size_callback(GLFWwindow*, int, int);
 void processInput(GLFWwindow*);
 bool InitOpenGL(int, int, GLFWwindow*&);
-bool InitScreen(int, int, unsigned int);
 
 int main()
 {
@@ -13,10 +12,13 @@ int main()
 	{
 		return -1;
 	}
-
-	Shader ShaderProgram("Shader_Class/shader.vs", "Shader_Class/shader.fs");
 	
-	SimScreen Screen(800,600);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	float TrailColor[4] = { 1.0f };
+
+	Renderer RendScreen(TrailColor);
 
 
 	while (!glfwWindowShouldClose(window))//Continues to render image on screen until window is closed
@@ -25,17 +27,16 @@ int main()
 		processInput(window);
 
 		//Render
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
 
-		ShaderProgram.use();
-		Screen.BindArray();
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-		glBindVertexArray(0);
+
+		RendScreen.Render();
+
 
 		//check and call events and swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
+
+		//RendScreen.OpacityPass(-1.0f);
 	}
 
 	glfwTerminate();//cleans out all of the resources we allocated for glfw
@@ -86,6 +87,7 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)//if escape key is pressed close the window
 		glfwSetWindowShouldClose(window, true);
 }
+
 
 
 

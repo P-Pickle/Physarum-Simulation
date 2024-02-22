@@ -6,7 +6,8 @@ class SimScreen
 {
 public:
 
-	SimScreen(int Wwidth, int Wheight);
+	SimScreen();
+	SimScreen(int Wwidth, int Wheight, float TrailColor[], int ACount);
 
 	//Used when render that object to the screen
 	void BindArray();
@@ -14,6 +15,9 @@ public:
 
 	//Used to alter the pixel data of the texture
 	void ChangePixel(int xoffset, int yoffset, float Color[]);
+	void ScaleOpacity(float Scalar);//Scales all of the pixels on the screen by a Scalar
+	void PurpleSquare();//used for testing
+
 
 private:
 
@@ -21,6 +25,10 @@ private:
 	void InitVertices();
 	void InitTexture();
 	void CreateImage();
+	
+	//Initializes the trail map to be overlayed the base texture
+	void InitTrailMap();
+	void CreateTrailImage();
 
 private:
 
@@ -28,9 +36,10 @@ private:
 	unsigned int EBO;
 	
 	unsigned int texture;
+	unsigned int TrailMap;
 
 	int width;
 	int height;
 
-	float defaultcolor[4] = { 0.0f, 0.0f, 0.0f, 1.0f }; //default color for the texture image
+	float defaultcolor[4] = { 1.0f, 1.0f, 1.0f, 1.0f }; //default color for the texture image
 };

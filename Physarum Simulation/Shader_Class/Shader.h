@@ -15,6 +15,7 @@ public:
 	unsigned int ID; //Shader program ID
 
 	//used to compile the shader program
+	Shader();
 	Shader(const char* VertexPath, const char* FragPath);
 	//used to Set the shader program to be the current one used
 	void use();
