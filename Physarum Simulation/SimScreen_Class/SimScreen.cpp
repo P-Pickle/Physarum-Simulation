@@ -9,22 +9,18 @@ SimScreen::SimScreen(int Wwidth, int Wheight, float TrailColor[], int ACount)
 	//Initialize SimScreen Variables
 	width = Wwidth;
 	height = Wheight;
+	AgentCount = ACount;
+	Agents = new Agent[AgentCount];
+
 
 	//Sets the VAO and EBO to the vertices of an object the size of the screen
 	InitVertices();
 
 	//generates a texture object and sets it's options to the ones needed to make the sim work
 	InitTexture();
-	
-	//Creates a texture image and sets it to a default color
-	CreateImage();
 
-	////Generates texture object to be used as a trail map
-	//InitTrailMap();
-
-	////generates the image that is going to be used as the trail map
-	//CreateTrailImage();
-
+	//Initializes the buffer used to talk to the compute shader
+	InitAgentBuff();
 
 
 }
@@ -68,46 +64,10 @@ void SimScreen::InitVertices()
 void SimScreen::InitTexture()
 {
 	//Generate texture object
-	glGenTextures(1, &texture);
-
-	//bind texture
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	//set texture options
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	//set the border color
-	float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-}
-
-void SimScreen::CreateImage()
-{
-
-	//Create a texture image the size of the window
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-	//change the pixels on the texture to the deafult color chosen earlier in the code
-	for (int y = 0; y <= height; y++)
-	{
-		for (int x = 0; x <= width; x++)
-		{
-			glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RGBA, GL_FLOAT, defaultcolor);
-		}
-	}
-
-
-}
-
-void SimScreen::InitTrailMap()
-{
-	//Generate texture object
 	glGenTextures(1, &TrailMap);
 
 	//bind texture
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, TrailMap);
 
 	//set texture options
@@ -116,29 +76,64 @@ void SimScreen::InitTrailMap()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	//set the border color
-	float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+	CreateWhite();
+	//Create a texture image the size of the window
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+
+	glBindImageTexture(0, TrailMap, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+	//glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void SimScreen::CreateWhite()
+{
+	// Generate texture data (fill with white color)
+	unsigned char* textureData = new unsigned char[width * height * 4]; // 4 components (RGBA)
+	for (int i = 0; i < width * height * 4; i += 4) {
+		textureData[i] = 255;   // Red
+		textureData[i + 1] = 255; // Green
+		textureData[i + 2] = 255; // Blue
+		textureData[i + 3] = 255; // Alpha
+	}
+
+	// Load texture data to GPU
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
+
+	delete[] textureData;
+
+}
+
+void SimScreen::InitAgentBuff()
+{
+	glGenBuffers(1, &AgentBuffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER,AgentBuffer);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, AgentCount * sizeof(Agent), Agents, GL_DYNAMIC_DRAW);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, AgentBuffer);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void SimScreen::SpawnAgentsCPU(std::string SpawnMode)
+{
+	glm::vec2 center = glm::vec2(width / 2, height / 2);
+	if (SpawnMode == "Center-Point")//Spawn agents in the center of the map with a random angle
+	{
+		for (int x = 0; x < AgentCount; x++)
+		{
+			srand(time(NULL));
+			Agents[x].Pos = center;
+			float angle = rand() % 360;
+			Agents[x].Dir = glm::vec2(cos(angle), sin(angle));
+		}
+	}
+
 
 
 }
 
-void SimScreen::CreateTrailImage()
+void SimScreen::GetAgentData()
 {
-	float Color[] = { 1.0f,1.0f,1.0f, 0.0f };
-
-	//Create a texture image the size of the window
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-	//change the pixels on the texture to the deafult color chosen earlier in the code
-	for (int y = 0; y <= height; y++)
-	{
-		for (int x = 0; x <= width; x++)
-		{
-			glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RGBA, GL_FLOAT, Color);
-		}
-	}
-
+	glGetNamedBufferSubData(AgentBuffer, 1, AgentCount * sizeof(Agent), Agents);
 }
 
 void SimScreen::BindArray()
@@ -146,12 +141,20 @@ void SimScreen::BindArray()
 	glBindVertexArray(VAO);
 }
 
+void SimScreen::BindTexImage()
+{
+	glBindImageTexture(0, TrailMap, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+}
+
 void SimScreen::BindTex()
 {
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	//glActiveTexture(GL_TEXTURE1);
-	//glBindTexture(GL_TEXTURE_2D, TrailMap);
+	glBindTexture(GL_TEXTURE_2D, TrailMap);
+}
+
+void SimScreen::BindAgents()
+{
+	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, AgentBuffer);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, AgentBuffer);
 }
 
 void SimScreen::ChangePixel(int xoffset, int yoffset, float Color[])
@@ -159,52 +162,9 @@ void SimScreen::ChangePixel(int xoffset, int yoffset, float Color[])
 	glTexSubImage2D(GL_TEXTURE_2D, 0, xoffset, yoffset, 1, 1, GL_RGBA, GL_FLOAT, Color);
 }
 
-void SimScreen::ScaleOpacity(float Scalar)
+void SimScreen::SpawnAgents(Shader SpawnProgram, std::string SpawnMode)
 {
-	BindTex();
-	float ScalarOpacity = Scalar ;
-	float OldOpacity[4] = { 0.0f };
-	float NewOpacity[4] = { 0.0f };
-
-	//loop through every pixel changing it's opacity
-	for (int y = 0; y <= height; y++)
-	{
-		for (int x = 0; x <= width; x++)
-		{
-			glReadPixels(x,y,1,1,GL_RGBA,GL_FLOAT,OldOpacity);
-			if (OldOpacity[3] != 1.0f && OldOpacity[3] != 0.0f)//if the Old Opacity is within the range of 1.0f and 0.0f
-			{
-				NewOpacity[0] = OldOpacity[0];
-				NewOpacity[1] = OldOpacity[1];
-				NewOpacity[2] = OldOpacity[2];
-				NewOpacity[3] = OldOpacity[3] + Scalar;//calculate new opacity level
-
-
-				if (NewOpacity[3] > 1)//if the new Opacity levels exceed 1 clamp it to 1.0f
-				{
-					NewOpacity[3] = 1.0f;
-				}
-				else if (NewOpacity[3] < 0)//if the new Opacity levels fall below 0 clamp it to 0.0f
-				{
-					NewOpacity[3] = 0.0f;
-				}
-
-				glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, 1, 1, GL_RGBA, GL_FLOAT, NewOpacity);
-			}
-
-		}
-	}
-
+	glDispatchCompute(AgentCount, 1, 1);
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 }
 
-void SimScreen::PurpleSquare()
-{
-	float Color[4] = { 1.0f,0.0f,1.0f,1.0f };
-	for (int y = 0; y < 100; y++)
-	{
-		for (int x = 0; x < 100; x++)
-		{
-			ChangePixel(100 + x, 100 + y, Color);
-		}
-	}
-}

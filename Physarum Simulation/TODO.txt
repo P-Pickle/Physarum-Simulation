@@ -1,2 +1,2 @@
-- test opacity levels (does having a 0 opacity show the geomtry color underneath)
--May need to make a secondary texture for the trails that is layered on top of the black texture for the opacity to actually work
+- Create movement update function withint the compute shader for the agents 
+- Create default spawn locations for agents

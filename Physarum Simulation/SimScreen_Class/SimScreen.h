@@ -1,6 +1,13 @@
 #pragma once
-#include "../Agent_Class/Agent.h"
+#include "../includes.h"
+#include "../Shader_Class/Shader.h"
 
+
+struct Agent
+{
+	glm::vec2 Pos;
+	glm::vec2 Dir;
+};
 
 class SimScreen
 {
@@ -11,35 +18,35 @@ public:
 
 	//Used when render that object to the screen
 	void BindArray();
+	void BindTexImage();
 	void BindTex();
+	void BindAgents();
 
 	//Used to alter the pixel data of the texture
 	void ChangePixel(int xoffset, int yoffset, float Color[]);
-	void ScaleOpacity(float Scalar);//Scales all of the pixels on the screen by a Scalar
-	void PurpleSquare();//used for testing
-
+	void SpawnAgents(Shader SpawnProgram, std::string SpawnMode);
+	void SpawnAgentsCPU(std::string SpawnMode);
+	void GetAgentData();
 
 private:
 
 	//Used to Initialize the Object used to show the simulation
 	void InitVertices();
 	void InitTexture();
-	void CreateImage();
-	
-	//Initializes the trail map to be overlayed the base texture
-	void InitTrailMap();
-	void CreateTrailImage();
+	void CreateWhite();
+	void InitAgentBuff();
 
 private:
 
 	unsigned int VAO;
 	unsigned int EBO;
 	
-	unsigned int texture;
 	unsigned int TrailMap;
 
 	int width;
 	int height;
 
-	float defaultcolor[4] = { 1.0f, 1.0f, 1.0f, 1.0f }; //default color for the texture image
+	int AgentCount;
+	Agent* Agents;
+	unsigned int AgentBuffer;//used to send agent information to the compute shader
 };

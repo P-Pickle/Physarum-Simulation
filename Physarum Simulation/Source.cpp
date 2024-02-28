@@ -1,9 +1,11 @@
-#include "Shader_Class/Shader.h"
 #include "Renderer_Class/Renderer.h"
+#include "Shader_Class/Shader.h"
+
 
 void framebuffer_size_callback(GLFWwindow*, int, int);
 void processInput(GLFWwindow*);
 bool InitOpenGL(int, int, GLFWwindow*&);
+void GenTexture(unsigned int&);
 
 int main()
 {
@@ -13,13 +15,21 @@ int main()
 		return -1;
 	}
 	
+	
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	printf("%s\n", glGetString(GL_VERSION));
 
 	float TrailColor[4] = { 1.0f };
 
 	Renderer RendScreen(TrailColor);
 
+	Shader Compute("Shader_Code/TestCompute.compute");
+
+	unsigned int texture;
+	GenTexture(texture);
 
 	while (!glfwWindowShouldClose(window))//Continues to render image on screen until window is closed
 	{
@@ -48,8 +58,8 @@ bool InitOpenGL(int width, int height, GLFWwindow*& window)
 	glfwInit();
 
 	//Sets the options for glfw
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	//Creates window with given size 800x600 and name LearnOpenGL
@@ -86,6 +96,24 @@ void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)//if escape key is pressed close the window
 		glfwSetWindowShouldClose(window, true);
+}
+
+void GenTexture(unsigned int& texture)
+{
+	unsigned int TEXTURE_WIDTH = 800;
+	unsigned int TEXTURE_HEIGHT = 800;
+
+	glGenTextures(1, &texture);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, TEXTURE_WIDTH, TEXTURE_HEIGHT, 0, GL_RGBA,
+		GL_FLOAT, NULL);
+
+	glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 }
 
 
