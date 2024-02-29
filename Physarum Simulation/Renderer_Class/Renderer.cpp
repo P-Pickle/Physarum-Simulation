@@ -4,7 +4,7 @@ Renderer::Renderer(float TrailColor[])
 {
 	//Intialize shader programs
 	ShaderProgram =  Shader("Shader_Code/shader.vs", "Shader_Code/shader.fs");
-	AgentComputeProgram = Shader("Shader_Code/TestCompute.compute");
+	AgentComputeProgram = Shader("Shader_Code/Test.comp");
 	OpacityComputeProgram = Shader("Shader_Code/OpacityPass.compute");
 	SpawnProgram = Shader("Shader_Code/AgentSpawn.compute");
 
@@ -19,7 +19,7 @@ Renderer::Renderer(float TrailColor[])
 void Renderer::Render()
 {
 
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.0f, 0.5f, 0.5f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	//update agents
@@ -28,13 +28,10 @@ void Renderer::Render()
 	//bind objects to be rendered
 	ShaderProgram.use();
 	Screen.BindArray();
-	ShaderProgram.setInt("TrailMap", 0);
-	Screen.BindTex();
+	//ShaderProgram.setInt("TrailMap", 0);
+	//Screen.BindTex();
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
-
-
 	//run over every pixel in the TrailMap and decrease it's opacity by the diffusion rate
 	//OpacityComputeProgram.use();
 	//glDispatchCompute(SimSettings.width, SimSettings.height, 1);
@@ -46,7 +43,7 @@ void Renderer::Update()
 
 	//Use Shader program
 	AgentComputeProgram.use();
-	Screen.BindTexImage();
+	//Screen.BindTexImage();
 
 	//bind Storage buffer
 	//Screen.BindAgents();
@@ -57,8 +54,8 @@ void Renderer::Update()
 	//AgentComputeProgram.setInt("AgentCount", SimSettings.AgentCount);
 
 	//dispatch 
-	glDispatchCompute((unsigned int)SimSettings.width, (unsigned int)SimSettings.height, 1);
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+	glDispatchCompute(SimSettings.width, SimSettings.height, 1);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 	//retreive data
 	//Screen.GetAgentData();

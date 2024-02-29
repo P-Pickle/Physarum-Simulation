@@ -1,0 +1,50 @@
+#version 460 core
+
+struct Agent
+{
+    vec2 Pos;
+    vec2 Dir;
+};
+
+layout(local_size_x = 1, local_size_y = 1,local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D imgOutput;
+layout (std430, binding=1) buffer AgentBuffer
+{
+    Agent Agents[];
+};
+
+uniform int width;
+uniform int height;
+
+void main() 
+{
+    vec4 Pixel = vec4(1.0, 1.0, 1.0, 1.0);
+    ivec2 ID = ivec2(gl_GlobalInvocationID.xy);
+    Agent CurrAgent = Agents[ID.x];
+
+    vec2 Direction = CurrAgent.Dir.xy;
+    vec2 NewPos = CurrAgent.Pos.xy + Direction;
+
+    if(NewPos.x < 0 || NewPos.x >= width)
+    {
+        NewPos.x = min(width - 0.01, max(0, NewPos.x));
+        NewPos.y = min(height-0.01, max(0, NewPos.y));
+
+        Direction = Direction.xy * vec2(-1,1);
+    }
+    if(NewPos.y < 0 || NewPos.y >= height)
+    {
+        NewPos.x = min(width - 0.01, max(0, NewPos.x));
+        NewPos.y = min(height-0.01, max(0, NewPos.y));
+
+        Direction = Direction.xy * vec2(1,-1);   
+    }
+
+    CurrAgent.Pos = NewPos;
+    CurrAgent.Dir = Direction;
+
+    Agents[ID.x].Pos = NewPos;
+    Agents[ID.x].Dir = Direction;
+
+    imageStore(imgOutput, ivec2(CurrAgent.Pos), Pixel);
+}

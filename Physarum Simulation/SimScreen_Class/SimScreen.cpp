@@ -73,13 +73,13 @@ void SimScreen::InitTexture()
 	//set texture options
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 
-	CreateWhite();
+	//CreateWhite();
 	//Create a texture image the size of the window
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
 
 	glBindImageTexture(0, TrailMap, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
@@ -89,16 +89,16 @@ void SimScreen::InitTexture()
 void SimScreen::CreateWhite()
 {
 	// Generate texture data (fill with white color)
-	unsigned char* textureData = new unsigned char[width * height * 4]; // 4 components (RGBA)
+	float* textureData = new float[width * height * 4]; // 4 components (RGBA)
 	for (int i = 0; i < width * height * 4; i += 4) {
-		textureData[i] = 255;   // Red
-		textureData[i + 1] = 255; // Green
-		textureData[i + 2] = 255; // Blue
-		textureData[i + 3] = 255; // Alpha
+		textureData[i] = 1.0f;   // Red
+		textureData[i + 1] = 1.0f; // Green
+		textureData[i + 2] = 1.0f; // Blue
+		textureData[i + 3] = 1.0f; // Alpha
 	}
 
 	// Load texture data to GPU
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, textureData);
 
 	delete[] textureData;
 

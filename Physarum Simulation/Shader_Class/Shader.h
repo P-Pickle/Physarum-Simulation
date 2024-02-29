@@ -2,12 +2,9 @@
 #ifndef Shader_H
 #define Shader_H
 
-#include <glad/glad.h>
+#include "../includes.h"
 
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
+
 
 class Shader
 {
@@ -29,11 +26,5 @@ public:
 
 private:
 };
-
-
-
-
-
-
 
 #endif

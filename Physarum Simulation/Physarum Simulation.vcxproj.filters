@@ -63,9 +63,6 @@
     <None Include="Shader_Code\shader.vs">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="Shader_Code\OpacityPass.compute" />
-    <None Include="Shader_Code\AgentUpdate.compute" />
-    <None Include="Shader_Code\AgentSpawn.compute" />
-    <None Include="Shader_Code\TestCompute.compute" />
+    <None Include="Shader_Code\Test.comp" />
   </ItemGroup>
 </Project>

@@ -3,8 +3,8 @@
 Settings::Settings()
 {
 	//default settings for TrailMap
-	width = 400;
-	height = 400;
+	width = 800;
+	height = 600;
 	AgentCount = 50;
 	DiffK = 3;
 	DecayRate = 0.1;

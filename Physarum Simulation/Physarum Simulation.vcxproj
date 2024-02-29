@@ -150,26 +150,9 @@
     <Text Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shader_Code\AgentUpdate.compute">
-      <FileType>Document</FileType>
-    </None>
     <None Include="Shader_Code\shader.fs" />
     <None Include="Shader_Code\shader.vs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Shader_Code\OpacityPass.compute">
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Shader_Code\AgentSpawn.compute">
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Shader_Code\TestCompute.compute">
-      <FileType>Document</FileType>
-    </None>
+    <None Include="Shader_Code\Test.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
