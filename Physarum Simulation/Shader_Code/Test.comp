@@ -1,14 +1,72 @@
 #version 460 core
+
+struct Agent
+{
+    vec2 Pos;
+    vec2 Dir;
+};
+
 layout(local_size_x = 1, local_size_y = 1,local_size_z = 1) in;
-layout(rgba32f, binding = 0) uniform image2D imgOutput;
+layout(rgba32f, binding = 0) uniform image2D TrailMap;
+layout (std430, binding=1) buffer AgentBuffer
+{
+    Agent Agents[];
+};
 
+//settings
+uniform int width;
+uniform int height;
+uniform float DecayRate;
+uniform float TrailDeposit;
+uniform vec4 TrailColor;
 
-void main() {
-    vec4 value = vec4(0.0, 0.0, 0.0, 1.0);
-    ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
-	
-    value.x = float(texelCoord.x)/(gl_NumWorkGroups.x);
-    value.y = float(texelCoord.y)/(gl_NumWorkGroups.y);
-	
-    imageStore(imgOutput, texelCoord, value);
+ivec2 ID = ivec2(gl_GlobalInvocationID.xy);
+
+void Update();
+void Decay();
+
+void main() 
+{
+    Decay();
+}
+
+void Update()
+{
+    vec4 Pixel = vec4(TrailColor.rgb, TrailDeposit);
+    Agent CurrAgent = Agents[ID.x];
+
+    vec2 Direction = CurrAgent.Dir.xy;
+    vec2 NewPos = CurrAgent.Pos.xy + Direction;
+
+    if(NewPos.x < 0 || NewPos.x >= width)//if the agent hit's an side wall reflect x
+    {
+        NewPos.x = min(width - 0.01, max(0, NewPos.x));
+        NewPos.y = min(height-0.01, max(0, NewPos.y));
+
+        Direction = Direction.xy * vec2(-1,1);
+    }
+    if(NewPos.y < 0 || NewPos.y >= height)//if the Agent hits a ceiling reflect y
+    {
+        NewPos.x = min(width - 0.01, max(0, NewPos.x));
+        NewPos.y = min(height-0.01, max(0, NewPos.y));
+
+        Direction = Direction.xy * vec2(1,-1);   
+    }
+
+    CurrAgent.Pos = NewPos;
+    CurrAgent.Dir = Direction;
+
+    Agents[ID.x].Pos = NewPos;
+    Agents[ID.x].Dir = Direction;
+
+    imageStore(TrailMap, ivec2(CurrAgent.Pos), Pixel);
+    
+
+}
+
+void Decay()
+{
+    vec4 Pixel = imageLoad(TrailMap, ID.xy);
+    Pixel.a = Pixel.a - DecayRate;
+
 }

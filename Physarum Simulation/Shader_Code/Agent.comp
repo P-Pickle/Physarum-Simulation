@@ -7,23 +7,42 @@ struct Agent
 };
 
 layout(local_size_x = 1, local_size_y = 1,local_size_z = 1) in;
-layout(rgba32f, binding = 0) uniform image2D imgOutput;
+layout(rgba32f, binding = 0) uniform image2D TrailMap;
 layout (std430, binding=1) buffer AgentBuffer
 {
     Agent Agents[];
 };
 
+//settings
+uniform int AgentCount;
 uniform int width;
 uniform int height;
+uniform float TrailDeposit;
+uniform vec4 TrailColor;
+uniform float DecayRate;
+uniform float deltaTime;
+uniform float movespeed;
+
+ivec2 ID = ivec2(gl_GlobalInvocationID.xy);
+
+void Update();
+void Decay();
 
 void main() 
-{
-    vec4 Pixel = vec4(1.0, 1.0, 1.0, 1.0);
-    ivec2 ID = ivec2(gl_GlobalInvocationID.xy);
-    Agent CurrAgent = Agents[ID.x];
+{  
+    if(ID.x < AgentCount && ID.y == 0)
+    {
+        Update();
+    }
+    Decay();
+}
 
+void Update()
+{
+    vec4 Pixel = vec4(TrailColor.rgb, TrailDeposit);
+    Agent CurrAgent = Agents[ID.x];
     vec2 Direction = CurrAgent.Dir.xy;
-    vec2 NewPos = CurrAgent.Pos.xy + Direction;
+    vec2 NewPos = CurrAgent.Pos.xy + Direction * movespeed * deltaTime;
 
     if(NewPos.x < 0 || NewPos.x >= width)
     {
@@ -46,5 +65,33 @@ void main()
     Agents[ID.x].Pos = NewPos;
     Agents[ID.x].Dir = Direction;
 
-    imageStore(imgOutput, ivec2(CurrAgent.Pos), Pixel);
+    imageStore(TrailMap, ivec2(CurrAgent.Pos), Pixel);
+}
+
+void Decay()
+{
+    if(ID.x > width)
+    {
+        return;
+    }
+    vec4 Pixel = imageLoad(TrailMap, ID.xy);
+    int OffsetX;
+    int OffsetY;
+    vec2 SampleLoc;
+    float sum = 0;
+    vec4 samplePixel;
+    for(int x = -1; x <= 1; x++)
+    {
+        for(int y = -1; y <= 1; y++)
+        {
+            OffsetX = min(width-1, max(0, ID.x + x));
+            OffsetY = min(height-1, max(0, ID.y + y));
+            samplePixel = imageLoad(TrailMap, ivec2(OffsetX, OffsetY));
+            sum += samplePixel.a;
+        }
+    }
+    float blur = sum/9;
+    Pixel.a = blur;
+    Pixel = vec4(Pixel.rgb, max(0,Pixel.a - DecayRate * deltaTime));
+    imageStore(TrailMap, ID.xy, Pixel);
 }

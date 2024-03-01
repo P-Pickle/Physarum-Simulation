@@ -5,17 +5,17 @@ Settings::Settings()
 	//default settings for TrailMap
 	width = 800;
 	height = 600;
-	AgentCount = 50;
+	AgentCount = 550;
 	DiffK = 3;
-	DecayRate = 0.1;
+	DecayRate = 0.1f;
 
 	//default settings for Agents
+	movespeed = 50;
 	PS = 1;
-	TrailColor = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	SA = 22.5;
 	SO = 9;
 	SW = 1;
-	depT = 1;
+	depT = 1.0f;
 
 	SpawnType = "Center-Point";
 

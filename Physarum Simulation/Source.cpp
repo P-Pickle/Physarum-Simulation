@@ -20,6 +20,8 @@ Settings SimSettings;
 
 int main()
 {
+	time_t timer;
+	std::chrono::duration<float> deltatime;
 	int width = SimSettings.width;
 	int height = SimSettings.height;
 	GLFWwindow* window;
@@ -39,6 +41,8 @@ int main()
 	unsigned int texture = InitTex(width, height);
 	unsigned int AgentBuffer = InitAgentBuff(SimSettings.AgentCount, Agents);
 
+	std::chrono::steady_clock::time_point LastTime = std::chrono::steady_clock::now();
+	std::chrono::steady_clock::time_point ThisTime;
 
 	while (!glfwWindowShouldClose(window))//Continues to render image on screen until window is closed
 	{
@@ -49,11 +53,29 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		//Render
+		ThisTime = std::chrono::steady_clock::now();
+		deltatime = std::chrono::duration_cast<std::chrono::duration<float>>(ThisTime - LastTime);
+		LastTime = ThisTime; 
+		//deltatime = 1;
+
+
+
+		//bind Compute Program
 		ComputeProgram.use();
+
+		//set uniforms and bind buffer to compute shader
+		ComputeProgram.setFloat("movespeed", SimSettings.movespeed);
+		ComputeProgram.setFloat("deltaTime", deltatime.count());
+		ComputeProgram.setInt("AgentCount", SimSettings.AgentCount);
 		ComputeProgram.setInt("width", width);
 		ComputeProgram.setInt("height", height);
+		ComputeProgram.setFloat("TrailDeposit", SimSettings.depT);
+		ComputeProgram.setVec4("TrailColor", SimSettings.TrailColor);
+		ComputeProgram.setFloat("DecayRate", SimSettings.DecayRate);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, AgentBuffer);
-		glDispatchCompute(SimSettings.AgentCount, 1, 1);
+
+		//Dispatch invocations 
+		glDispatchCompute(SimSettings.width, SimSettings.height, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 		DefaultProgram.use();
@@ -176,14 +198,14 @@ unsigned int InitTex(int width, int height)
 	// Generate texture data (fill with white color)
 	float* textureData = new float[width * height * 4]; // 4 components (RGBA)
 	for (int i = 0; i < width * height * 4; i += 4) {
-		textureData[i] = 1.0f;   // Red
-		textureData[i + 1] = 1.0f; // Green
-		textureData[i + 2] = 1.0f; // Blue
-		textureData[i + 3] = 1.0f; // Alpha
+		textureData[i] = SimSettings.TrailColor[0];   // Red
+		textureData[i + 1] = SimSettings.TrailColor[1]; // Green
+		textureData[i + 2] = SimSettings.TrailColor[1]; // Blue
+		textureData[i + 3] = 0.0f; // Alpha
 	}
 
 	// Load texture data to GPU
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, textureData);
 
 	delete[] textureData;
 
@@ -210,13 +232,13 @@ unsigned int InitAgentBuff(int AgentCount, Agent* Agents)
 
 Agent* SpawnAgents(int AgentCount)
 {
+	srand(time(NULL));
 	Agent* Agents = new Agent[AgentCount];
 	glm::vec2 center = glm::vec2(SimSettings.width / 2, SimSettings.height / 2);
 	if (SimSettings.SpawnType == "Center-Point")//Spawn agents in the center of the map with a random angle
 	{
 		for (int x = 0; x < AgentCount; x++)
 		{
-			srand(time(NULL));
 			Agents[x].Pos = center;
 			float angle = rand() % 360;
 			Agents[x].Dir = glm::vec2(cos(angle), sin(angle));
