@@ -14,11 +14,15 @@ layout (std430, binding=1) buffer AgentBuffer
 };
 
 //settings
+uniform int AgentCount;
 uniform int width;
 uniform int height;
-uniform float DecayRate;
 uniform float TrailDeposit;
 uniform vec4 TrailColor;
+uniform float deltaTime;
+uniform float DecayRate;
+uniform float movespeed;
+uniform float DiffuseRate;
 
 ivec2 ID = ivec2(gl_GlobalInvocationID.xy);
 
@@ -26,7 +30,11 @@ void Update();
 void Decay();
 
 void main() 
-{
+{  
+    if(ID.x < AgentCount && ID.y == 0)
+    {
+        Update();
+    }
     Decay();
 }
 
@@ -34,18 +42,17 @@ void Update()
 {
     vec4 Pixel = vec4(TrailColor.rgb, TrailDeposit);
     Agent CurrAgent = Agents[ID.x];
-
     vec2 Direction = CurrAgent.Dir.xy;
-    vec2 NewPos = CurrAgent.Pos.xy + Direction;
+    vec2 NewPos = CurrAgent.Pos.xy + Direction * movespeed * deltaTime;
 
-    if(NewPos.x < 0 || NewPos.x >= width)//if the agent hit's an side wall reflect x
+    if(NewPos.x < 0 || NewPos.x >= width)
     {
         NewPos.x = min(width - 0.01, max(0, NewPos.x));
         NewPos.y = min(height-0.01, max(0, NewPos.y));
 
         Direction = Direction.xy * vec2(-1,1);
     }
-    if(NewPos.y < 0 || NewPos.y >= height)//if the Agent hits a ceiling reflect y
+    if(NewPos.y < 0 || NewPos.y >= height)
     {
         NewPos.x = min(width - 0.01, max(0, NewPos.x));
         NewPos.y = min(height-0.01, max(0, NewPos.y));
@@ -60,13 +67,34 @@ void Update()
     Agents[ID.x].Dir = Direction;
 
     imageStore(TrailMap, ivec2(CurrAgent.Pos), Pixel);
-    
-
 }
+
 
 void Decay()
 {
+    if(ID.x > width)
+    {
+        return;
+    }
     vec4 Pixel = imageLoad(TrailMap, ID.xy);
-    Pixel.a = Pixel.a - DecayRate;
-
+    int OffsetX;
+    int OffsetY;
+    vec2 SampleLoc;
+    float sum = 0;
+    vec4 samplePixel;
+    for(int x = -1; x <= 1; x++)
+    {
+        for(int y = -1; y <= 1; y++)
+        {
+            OffsetX = min(width-1, max(0, ID.x + x));
+            OffsetY = min(height-1, max(0, ID.y + y));
+            samplePixel = imageLoad(TrailMap, ivec2(OffsetX, OffsetY));
+            sum += samplePixel.a;
+        }
+    }
+    float blur = sum/9;
+    //Pixel.a = blur;
+    Pixel.a = mix(Pixel.a, blur, DiffuseRate * deltaTime);
+    Pixel = vec4(Pixel.rgb, max(0,Pixel.a - DecayRate * deltaTime));
+    imageStore(TrailMap, ID.xy, Pixel);
 }

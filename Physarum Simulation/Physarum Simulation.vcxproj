@@ -133,7 +133,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="glad.c" />
-    <ClCompile Include="Renderer_Class\Renderer.cpp" />
     <ClCompile Include="Settings_Class\Settings.cpp" />
     <ClCompile Include="Shader_Class\Shader.cpp" />
     <ClCompile Include="SimScreen_Class\SimScreen.cpp" />
@@ -141,7 +140,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes.h" />
-    <ClInclude Include="Renderer_Class\Renderer.h" />
     <ClInclude Include="Settings_Class\Settings.h" />
     <ClInclude Include="SimScreen_Class\SimScreen.h" />
     <ClInclude Include="Shader_Class\Shader.h" />

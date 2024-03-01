@@ -20,8 +20,7 @@ Settings SimSettings;
 
 int main()
 {
-	time_t timer;
-	std::chrono::duration<float> deltatime;
+	
 	int width = SimSettings.width;
 	int height = SimSettings.height;
 	GLFWwindow* window;
@@ -34,7 +33,7 @@ int main()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	Shader DefaultProgram("Shader_Code/shader.vs", "Shader_Code/shader.fs");
-	Shader ComputeProgram("Shader_Code/Agent.comp");
+	Shader ComputeProgram("Shader_Code/Test.comp");
 
 	Agent* Agents = SpawnAgents(SimSettings.AgentCount);
 	unsigned int VAO = InitVerts();
@@ -43,6 +42,7 @@ int main()
 
 	std::chrono::steady_clock::time_point LastTime = std::chrono::steady_clock::now();
 	std::chrono::steady_clock::time_point ThisTime;
+	std::chrono::duration<float> deltatime;
 
 	while (!glfwWindowShouldClose(window))//Continues to render image on screen until window is closed
 	{
@@ -72,6 +72,7 @@ int main()
 		ComputeProgram.setFloat("TrailDeposit", SimSettings.depT);
 		ComputeProgram.setVec4("TrailColor", SimSettings.TrailColor);
 		ComputeProgram.setFloat("DecayRate", SimSettings.DecayRate);
+		ComputeProgram.setFloat("DiffuseRate", SimSettings.DiffuseRate);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, AgentBuffer);
 
 		//Dispatch invocations 

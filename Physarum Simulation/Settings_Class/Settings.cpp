@@ -5,9 +5,10 @@ Settings::Settings()
 	//default settings for TrailMap
 	width = 800;
 	height = 600;
-	AgentCount = 550;
+	AgentCount = 500;
 	DiffK = 3;
 	DecayRate = 0.1f;
+	DiffuseRate = 10.0f;
 
 	//default settings for Agents
 	movespeed = 50;

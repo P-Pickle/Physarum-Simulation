@@ -19,9 +19,10 @@ uniform int width;
 uniform int height;
 uniform float TrailDeposit;
 uniform vec4 TrailColor;
-uniform float DecayRate;
 uniform float deltaTime;
+uniform float DecayRate;
 uniform float movespeed;
+uniform float DiffuseRate;
 
 ivec2 ID = ivec2(gl_GlobalInvocationID.xy);
 
@@ -67,6 +68,7 @@ void Update()
 
     imageStore(TrailMap, ivec2(CurrAgent.Pos), Pixel);
 }
+
 
 void Decay()
 {
