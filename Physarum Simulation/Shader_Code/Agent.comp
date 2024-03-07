@@ -17,17 +17,29 @@ layout (std430, binding=1) buffer AgentBuffer
 uniform int AgentCount;
 uniform int width;
 uniform int height;
-uniform float TrailDeposit;
 uniform vec4 TrailColor;
 uniform float deltaTime;
-uniform float DecayRate;
+
+//used for updating agent location
+uniform float TrailDeposit;
 uniform float movespeed;
+uniform float RotationAngle;
+
+//used for decay and diffusion
+uniform float DecayRate;
 uniform float DiffuseRate;
+uniform int KernelSize;
+
+//used for sensing trails
+uniform float SensorOffsetAngle;
+uniform int SensorOffsetDistance;
+uniform int SensorWidth;
 
 ivec2 ID = ivec2(gl_GlobalInvocationID.xy);
 
 void Update();
 void Decay();
+float Sense(Agent, float);
 
 void main() 
 {  
@@ -42,7 +54,31 @@ void Update()
 {
     vec4 Pixel = vec4(TrailColor.rgb, TrailDeposit);
     Agent CurrAgent = Agents[ID.x];
-    vec2 Direction = CurrAgent.Dir.xy;
+    vec2 Direction;
+    float AgentAngle;
+
+    float FrontWeight = Sense(CurrAgent, 0);
+    float LeftWeight = Sense(CurrAgent, SensorOffsetAngle);
+    float RightWeight = Sense(CurrAgent, -SensorOffsetAngle);
+
+    if(FrontWeight > RightWeight && FrontWeight > LeftWeight)
+    {
+        Direction = CurrAgent.Dir.xy;
+    }
+    else if(LeftWeight > RightWeight)//Left has the greatest weight
+    {
+        AgentAngle = atan(CurrAgent.Dir.y,CurrAgent.Dir.x);
+        AgentAngle += RotationAngle * deltaTime;//add randomness here
+        Direction = vec2(cos(AgentAngle), sin(AgentAngle));
+    }
+    else if(RightWeight > LeftWeight)//Right has the greatest weight
+    {
+        AgentAngle = atan(CurrAgent.Dir.y,CurrAgent.Dir.x);
+        AgentAngle -= RotationAngle * deltaTime;//add randomness here
+        Direction = vec2(cos(AgentAngle), sin(AgentAngle));
+    }
+
+    //Direction = CurrAgent.Dir.xy;
     vec2 NewPos = CurrAgent.Pos.xy + Direction * movespeed * deltaTime;
 
     if(NewPos.x < 0 || NewPos.x >= width)
@@ -69,7 +105,6 @@ void Update()
     imageStore(TrailMap, ivec2(CurrAgent.Pos), Pixel);
 }
 
-
 void Decay()
 {
     if(ID.x > width)
@@ -80,20 +115,56 @@ void Decay()
     int OffsetX;
     int OffsetY;
     vec2 SampleLoc;
-    float sum = 0;
+    vec4 sum = vec4(0,0,0,0);
     vec4 samplePixel;
-    for(int x = -1; x <= 1; x++)
+    int KernelOffset = KernelSize/2;
+    int SampleCount = KernelSize * KernelSize; 
+
+    for(int x = -KernelOffset; x <= KernelOffset; x++)
     {
-        for(int y = -1; y <= 1; y++)
+        for(int y = -KernelOffset; y <= KernelOffset; y++)
         {
             OffsetX = min(width-1, max(0, ID.x + x));
             OffsetY = min(height-1, max(0, ID.y + y));
             samplePixel = imageLoad(TrailMap, ivec2(OffsetX, OffsetY));
+            sum += samplePixel;
+        }
+    }
+
+    vec4 blur = sum/SampleCount;
+    vec4 newPixel = mix(Pixel, blur, DiffuseRate * deltaTime);
+    Pixel = vec4(newPixel.rgb, max(0,newPixel.a - DecayRate * deltaTime));
+    imageStore(TrailMap, ID.xy, Pixel);
+}
+
+float Sense(Agent CurrAgent, float SenseOffset)
+{
+    float AgentAngle = atan(CurrAgent.Dir.y, CurrAgent.Dir.x);
+    float SenseAngle = AgentAngle + SenseOffset;
+    vec2 SenseDirection = vec2(cos(SenseAngle), sin(SenseAngle));
+
+    ivec2 center = ivec2(CurrAgent.Pos + SenseDirection * SensorOffsetDistance);
+    int Radius = SensorWidth / 2;
+
+    float sum = 0;
+    int OffsetX;
+    int OffsetY;
+    vec4 samplePixel;
+
+    for(int x = -Radius; x <= Radius; x++)
+    {
+        for(int y = -Radius; y <= Radius; y++)
+        {
+            OffsetX = min(width-1, max(0,center.x + x));
+            OffsetY = min(height-1, max(0,center.y + y));
+
+            samplePixel = imageLoad(TrailMap, ivec2(OffsetX,OffsetY));
             sum += samplePixel.a;
         }
     }
-    float blur = sum/9;
-    Pixel.a = blur;
-    Pixel = vec4(Pixel.rgb, max(0,Pixel.a - DecayRate * deltaTime));
-    imageStore(TrailMap, ID.xy, Pixel);
+
+    return sum;
+
 }
+
+

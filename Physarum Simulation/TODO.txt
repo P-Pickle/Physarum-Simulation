@@ -1,2 +1,2 @@
-- Create movement update function withint the compute shader for the agents 
-- Create default spawn locations for agents
+-decouple decay and agent shaders
+-Add fixed deltaTime

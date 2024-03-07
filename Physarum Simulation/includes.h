@@ -4,7 +4,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-//#include <GL/glut.h>
 #include <iostream>
 #include <algorithm>
 #include <time.h>
@@ -12,3 +11,6 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <vector>
+#define _USE_MATH_DEFINES
+#include <math.h>

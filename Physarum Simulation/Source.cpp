@@ -40,6 +40,11 @@ int main()
 	unsigned int texture = InitTex(width, height);
 	unsigned int AgentBuffer = InitAgentBuff(SimSettings.AgentCount, Agents);
 
+
+	int ready;
+	std::cout << "input when ready: ";
+	std::cin >> ready;
+
 	std::chrono::steady_clock::time_point LastTime = std::chrono::steady_clock::now();
 	std::chrono::steady_clock::time_point ThisTime;
 	std::chrono::duration<float> deltatime;
@@ -64,19 +69,32 @@ int main()
 		ComputeProgram.use();
 
 		//set uniforms and bind buffer to compute shader
-		ComputeProgram.setFloat("movespeed", SimSettings.movespeed);
-		ComputeProgram.setFloat("deltaTime", deltatime.count());
+		//overall Simulation settings
 		ComputeProgram.setInt("AgentCount", SimSettings.AgentCount);
 		ComputeProgram.setInt("width", width);
 		ComputeProgram.setInt("height", height);
-		ComputeProgram.setFloat("TrailDeposit", SimSettings.depT);
 		ComputeProgram.setVec4("TrailColor", SimSettings.TrailColor);
+		ComputeProgram.setFloat("deltaTime", deltatime.count() * 30);
+
+		//Agent Movement settings
+		ComputeProgram.setFloat("movespeed", SimSettings.movespeed);
+		ComputeProgram.setFloat("TrailDeposit", SimSettings.depT);
+		ComputeProgram.setFloat("RotationAngle", SimSettings.RA);
+
+		//decay and diffusion settings
 		ComputeProgram.setFloat("DecayRate", SimSettings.DecayRate);
 		ComputeProgram.setFloat("DiffuseRate", SimSettings.DiffuseRate);
+		ComputeProgram.setInt("KernelSize", SimSettings.DiffK);
+
+		//Sensor Settings
+		ComputeProgram.setFloat("SensorOffsetAngle", SimSettings.SA);
+		ComputeProgram.setInt("SensorOffsetDistance", SimSettings.SO);
+		ComputeProgram.setInt("SensorWidth", SimSettings.SW);
+
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, AgentBuffer);
 
 		//Dispatch invocations 
-		glDispatchCompute(SimSettings.width, SimSettings.height, 1);
+		glDispatchCompute(SimSettings.AgentCount, SimSettings.height, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 		DefaultProgram.use();
@@ -241,6 +259,16 @@ Agent* SpawnAgents(int AgentCount)
 		for (int x = 0; x < AgentCount; x++)
 		{
 			Agents[x].Pos = center;
+			float angle = rand() % 360;
+			Agents[x].Dir = glm::vec2(cos(angle), sin(angle));
+		}
+	}
+	else if (SimSettings.SpawnType == "Random")
+	{
+		for (int x = 0; x < AgentCount; x++)
+		{
+			Agents[x].Pos.x = rand() % (SimSettings.width - 1);
+			Agents[x].Pos.y = rand() % (SimSettings.height - 1);
 			float angle = rand() % 360;
 			Agents[x].Dir = glm::vec2(cos(angle), sin(angle));
 		}

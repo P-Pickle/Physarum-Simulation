@@ -1,22 +1,24 @@
 #include "Settings.h"
 
+
 Settings::Settings()
 {
 	//default settings for TrailMap
-	width = 800;
-	height = 600;
-	AgentCount = 500;
+	width = 640; //640
+	height = 360; // 360
+	AgentCount = 70000;
 	DiffK = 3;
-	DecayRate = 0.1f;
-	DiffuseRate = 10.0f;
+	DecayRate = 0.01f;
+	DiffuseRate = 1.0f;
 
 	//default settings for Agents
-	movespeed = 50;
+	movespeed = 1.0f;
 	PS = 1;
-	SA = 22.5;
+	SA = M_PI/4;
 	SO = 9;
 	SW = 1;
 	depT = 1.0f;
+	RA = M_PI/4;
 
 	SpawnType = "Center-Point";
 

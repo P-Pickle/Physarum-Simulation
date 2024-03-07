@@ -34,15 +34,24 @@ Shader::Shader(const char* ComputePath)
 	glShaderSource(compute, 1, &cShaderCode, NULL);
 	glCompileShader(compute);
 
+
+	glGetShaderiv(compute, GL_COMPILE_STATUS, &success);
+	if (success == GL_FALSE)
+	{
+		glGetShaderInfoLog(compute, 512, NULL, infolog);
+		std::cout << "ERROR::COMPUTE::SHADER::PROGRAM::COMPILATION_FAILED\n" << infolog << std::endl;
+	}
+
+
 	ID = glCreateProgram();
 	glAttachShader(ID, compute);
 	glLinkProgram(ID);
 
 	glGetShaderiv(ID, GL_LINK_STATUS, &success);
-	if (!success)
+	if (success == GL_FALSE)
 	{
 		glGetShaderInfoLog(ID, 512, NULL, infolog);
-		std::cout << "ERROR::COMPUTE::SHADER::PROGRAM::COMPILATION_FAILED\n" << infolog << std::endl;
+		std::cout << "ERROR::COMPUTE::SHADER::PROGRAM::LINKING_FAILED\n" << infolog << std::endl;
 	}
 
 	glDeleteShader(compute);
@@ -115,7 +124,7 @@ Shader::Shader(const char* VertexPath, const char* FragPath)
 	if (!success)
 	{
 		glGetShaderInfoLog(ID, 512, NULL, infolog);
-		std::cout << "ERROR::SHADER::Shader::Program::COMPILATION_FAILED\n" << infolog << std::endl;
+		std::cout << "ERROR::SHADER::Shader::Program::LINKING_FAILED\n" << infolog << std::endl;
 	}
 
 	glDeleteShader(vertex);
