@@ -33,7 +33,7 @@ int main()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	Shader DefaultProgram("Shader_Code/shader.vs", "Shader_Code/shader.fs");
-	Shader ComputeProgram("Shader_Code/Test.comp");
+	Shader ComputeProgram("Shader_Code/Agent.comp");
 
 	Agent* Agents = SpawnAgents(SimSettings.AgentCount);
 	unsigned int VAO = InitVerts();
@@ -41,9 +41,9 @@ int main()
 	unsigned int AgentBuffer = InitAgentBuff(SimSettings.AgentCount, Agents);
 
 
-	int ready;
-	std::cout << "input when ready: ";
-	std::cin >> ready;
+	//int ready;
+	//std::cout << "input when ready: ";
+	//std::cin >> ready;
 
 	std::chrono::steady_clock::time_point LastTime = std::chrono::steady_clock::now();
 	std::chrono::steady_clock::time_point ThisTime;

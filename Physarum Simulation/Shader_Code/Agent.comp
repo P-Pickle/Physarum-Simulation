@@ -40,6 +40,7 @@ ivec2 ID = ivec2(gl_GlobalInvocationID.xy);
 void Update();
 void Decay();
 float Sense(Agent, float);
+uint random (uint);
 
 void main() 
 {  
@@ -57,43 +58,53 @@ void Update()
     vec2 Direction;
     float AgentAngle;
 
+    //float RandomRotationPercent = 1;
+    float RandomRotationPercent = float(random(uint(CurrAgent.Pos.x * CurrAgent.Pos.y * deltaTime))) / 4294967295.0;//find a random number within the range 0-1
+
     float FrontWeight = Sense(CurrAgent, 0);
     float LeftWeight = Sense(CurrAgent, SensorOffsetAngle);
     float RightWeight = Sense(CurrAgent, -SensorOffsetAngle);
 
-    if(FrontWeight > RightWeight && FrontWeight > LeftWeight)
+    AgentAngle = atan(CurrAgent.Dir.y,CurrAgent.Dir.x);
+    if(FrontWeight > LeftWeight && FrontWeight > RightWeight)//Front has the greatest weight
     {
-        Direction = CurrAgent.Dir.xy;
+        AgentAngle += 0;
     }
-    else if(LeftWeight > RightWeight)//Left has the greatest weight
+    else if (FrontWeight < LeftWeight && FrontWeight < RightWeight)//if both are greater than front turn in random direction based on RotationAngle
     {
-        AgentAngle = atan(CurrAgent.Dir.y,CurrAgent.Dir.x);
-        AgentAngle += RotationAngle * deltaTime;//add randomness here
-        Direction = vec2(cos(AgentAngle), sin(AgentAngle));
+        AgentAngle += (RandomRotationPercent - 0.5) * 2 * RotationAngle * deltaTime;
     }
     else if(RightWeight > LeftWeight)//Right has the greatest weight
     {
-        AgentAngle = atan(CurrAgent.Dir.y,CurrAgent.Dir.x);
-        AgentAngle -= RotationAngle * deltaTime;//add randomness here
-        Direction = vec2(cos(AgentAngle), sin(AgentAngle));
+        AgentAngle -=   RotationAngle * deltaTime;
+    }
+    else if(LeftWeight > RightWeight)//Left has the greatest weight
+    {
+        AgentAngle += RotationAngle * deltaTime;
+    }
+    else
+    {
+        AgentAngle += 0;
     }
 
+
+    Direction = vec2(cos(AgentAngle), sin(AgentAngle));
     //Direction = CurrAgent.Dir.xy;
-    vec2 NewPos = CurrAgent.Pos.xy + Direction * movespeed * deltaTime;
+    vec2 NewPos = CurrAgent.Pos + Direction * movespeed * deltaTime;
 
     if(NewPos.x < 0 || NewPos.x >= width)
     {
         NewPos.x = min(width - 0.01, max(0, NewPos.x));
         NewPos.y = min(height-0.01, max(0, NewPos.y));
 
-        Direction = Direction.xy * vec2(-1,1);
+        Direction = Direction * vec2(-1,1);
     }
     if(NewPos.y < 0 || NewPos.y >= height)
     {
         NewPos.x = min(width - 0.01, max(0, NewPos.x));
         NewPos.y = min(height-0.01, max(0, NewPos.y));
 
-        Direction = Direction.xy * vec2(1,-1);   
+        Direction = Direction * vec2(1,-1);   
     }
 
     CurrAgent.Pos = NewPos;
@@ -107,7 +118,7 @@ void Update()
 
 void Decay()
 {
-    if(ID.x > width)
+    if(ID.x >= width)
     {
         return;
     }
@@ -168,3 +179,9 @@ float Sense(Agent CurrAgent, float SenseOffset)
 }
 
 
+uint random(uint Seed)
+{
+    uint state = Seed * 747796405u + 2891336453u;
+    uint word = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    return (word >> 22u) ^ word;
+}
