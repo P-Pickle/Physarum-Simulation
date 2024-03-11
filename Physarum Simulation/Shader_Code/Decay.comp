@@ -1,0 +1,51 @@
+#version 460 core
+layout(local_size_x = 1, local_size_y = 1,local_size_z = 1) in;
+layout(rgba32f, binding = 0) uniform image2D TrailMap;
+
+//Simulation Parameters
+uniform int width;
+uniform int height;
+uniform vec4 TrailColor;
+uniform float deltaTime;
+
+//used for decay and diffusion
+uniform float DecayRate;
+uniform float DiffuseRate;
+uniform int KernelSize;
+
+ivec2 ID = ivec2(gl_GlobalInvocationID.xy);
+
+void Decay();
+
+void main()
+{
+    Decay();
+}
+
+void Decay()
+{
+    vec4 Pixel = imageLoad(TrailMap, ID.xy);
+    int OffsetX;
+    int OffsetY;
+    vec2 SampleLoc;
+    vec4 sum = vec4(0,0,0,0);
+    vec4 samplePixel;
+    int KernelOffset = KernelSize/2;
+    int SampleCount = KernelSize * KernelSize; 
+
+    for(int x = -KernelOffset; x <= KernelOffset; x++)
+    {
+        for(int y = -KernelOffset; y <= KernelOffset; y++)
+        {
+            OffsetX = min(width-1, max(0, ID.x + x));
+            OffsetY = min(height-1, max(0, ID.y + y));
+            samplePixel = imageLoad(TrailMap, ivec2(OffsetX, OffsetY));
+            sum += samplePixel;
+        }
+    }
+
+    vec4 blur = sum/SampleCount;
+    vec4 newPixel = mix(Pixel, blur, DiffuseRate * deltaTime);
+    Pixel = vec4(newPixel.rgb, max(0,newPixel.a - DecayRate * deltaTime));
+    imageStore(TrailMap, ID.xy, Pixel);
+}

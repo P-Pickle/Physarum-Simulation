@@ -1,3 +1,1 @@
--decouple decay and agent shaders
 -Add fixed deltaTime
--make each thread responsible for more than 1 agent to increase max agent count

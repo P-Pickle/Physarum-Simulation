@@ -24,9 +24,6 @@
     <ClCompile Include="Shader_Class\Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SimScreen_Class\SimScreen.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Settings_Class\Settings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -36,9 +33,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Shader_Class\Shader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SimScreen_Class\SimScreen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Settings_Class\Settings.h">
@@ -58,5 +52,8 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="Shader_Code\Test.comp" />
+    <None Include="Shader_Code\Decay.comp" />
+    <None Include="Shader_Code\Agent.comp" />
+    <None Include="Shader_Code\TestDecay.comp" />
   </ItemGroup>
 </Project>

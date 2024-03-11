@@ -135,22 +135,23 @@
     <ClCompile Include="glad.c" />
     <ClCompile Include="Settings_Class\Settings.cpp" />
     <ClCompile Include="Shader_Class\Shader.cpp" />
-    <ClCompile Include="SimScreen_Class\SimScreen.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes.h" />
     <ClInclude Include="Settings_Class\Settings.h" />
-    <ClInclude Include="SimScreen_Class\SimScreen.h" />
     <ClInclude Include="Shader_Class\Shader.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="TODO.txt" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shader_Code\Agent.comp" />
+    <None Include="Shader_Code\Decay.comp" />
     <None Include="Shader_Code\shader.fs" />
     <None Include="Shader_Code\shader.vs" />
     <None Include="Shader_Code\Test.comp" />
+    <None Include="Shader_Code\TestDecay.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

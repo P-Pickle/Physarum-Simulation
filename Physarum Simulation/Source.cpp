@@ -20,7 +20,6 @@ Settings SimSettings;
 
 int main()
 {
-	
 	int width = SimSettings.width;
 	int height = SimSettings.height;
 	GLFWwindow* window;
@@ -29,17 +28,28 @@ int main()
 		return -1;
 	}
 
+	GLint InvocationLimit[3] = { 0 };
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, (GLuint)0, &InvocationLimit[0]);
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, (GLuint)1, &InvocationLimit[1]);
+	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, (GLuint)2, &InvocationLimit[2]);
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	Shader DefaultProgram("Shader_Code/shader.vs", "Shader_Code/shader.fs");
 	Shader ComputeProgram("Shader_Code/Agent.comp");
+	Shader DecayProgram("Shader_Code/Decay.comp");
 
 	Agent* Agents = SpawnAgents(SimSettings.AgentCount);
 	unsigned int VAO = InitVerts();
 	unsigned int texture = InitTex(width, height);
 	unsigned int AgentBuffer = InitAgentBuff(SimSettings.AgentCount, Agents);
 
+	ComputeProgram.use();
+	glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+	DecayProgram.use();
+	glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
 	//int ready;
 	//std::cout << "input when ready: ";
@@ -60,8 +70,7 @@ int main()
 		//Render
 		ThisTime = std::chrono::steady_clock::now();
 		deltatime = std::chrono::duration_cast<std::chrono::duration<float>>(ThisTime - LastTime);
-		LastTime = ThisTime; 
-		//deltatime = 1;
+		LastTime = ThisTime;
 
 
 
@@ -81,11 +90,6 @@ int main()
 		ComputeProgram.setFloat("TrailDeposit", SimSettings.depT);
 		ComputeProgram.setFloat("RotationAngle", SimSettings.RA);
 
-		//decay and diffusion settings
-		ComputeProgram.setFloat("DecayRate", SimSettings.DecayRate);
-		ComputeProgram.setFloat("DiffuseRate", SimSettings.DiffuseRate);
-		ComputeProgram.setInt("KernelSize", SimSettings.DiffK);
-
 		//Sensor Settings
 		ComputeProgram.setFloat("SensorOffsetAngle", SimSettings.SA);
 		ComputeProgram.setInt("SensorOffsetDistance", SimSettings.SO);
@@ -94,7 +98,26 @@ int main()
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, AgentBuffer);
 
 		//Dispatch invocations 
-		glDispatchCompute(SimSettings.AgentCount, SimSettings.height, 1);
+		glDispatchCompute(SimSettings.AgentCount/10, 1, 1);
+		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+
+		//bind Decay Program
+		DecayProgram.use();
+
+		//Simulation screen parameters
+		DecayProgram.setInt("width", width);
+		DecayProgram.setInt("height", height);
+		DecayProgram.setVec4("TrailColor", SimSettings.TrailColor);
+		DecayProgram.setVec4("EndColor", SimSettings.EndColor);//remove when running primary decay shader
+		DecayProgram.setFloat("deltaTime", deltatime.count() * 30);
+
+		//decay and diffusion settings
+		DecayProgram.setFloat("DecayRate", SimSettings.DecayRate);
+		DecayProgram.setFloat("DiffuseRate", SimSettings.DiffuseRate);
+		DecayProgram.setInt("KernelSize", SimSettings.DiffK);
+
+		//Dispatch inovcations
+		glDispatchCompute(SimSettings.width, SimSettings.height, 1);
 		glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
 		DefaultProgram.use();
@@ -120,7 +143,6 @@ bool InitOpenGL(int width, int height, GLFWwindow*& window)
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	//Creates window with given size 800x600 and name LearnOpenGL
 	window = glfwCreateWindow(width, height, "Simulation Window", NULL, NULL);
 	if (window == NULL)
 	{
@@ -231,9 +253,6 @@ unsigned int InitTex(int width, int height)
 	//Create a texture image the size of the window
 	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, 800, 600, 0, GL_RGBA, GL_FLOAT, NULL);
 
-	glBindImageTexture(0, texture, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-
-
 	return texture;
 }
 
@@ -244,7 +263,7 @@ unsigned int InitAgentBuff(int AgentCount, Agent* Agents)
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, AgentCount * sizeof(Agent), Agents, GL_DYNAMIC_COPY);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, buffer);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 	return buffer;
 }
@@ -262,6 +281,7 @@ Agent* SpawnAgents(int AgentCount)
 			float angle = rand() % 360;
 			Agents[x].Dir = glm::vec2(cos(angle), sin(angle));
 		}
+
 	}
 	else if (SimSettings.SpawnType == "Random")
 	{
